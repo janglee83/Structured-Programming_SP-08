@@ -13,7 +13,7 @@ class CreateCustomerInformationTable extends Migration
      */
     public function up()
     {
-        Schema::create('customer_information', function (Blueprint $table) {
+        Schema::create('customer_informations', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('email');
@@ -33,6 +33,6 @@ class CreateCustomerInformationTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('customer_information');
+        Schema::dropIfExists('customer_informations');
     }
 }
