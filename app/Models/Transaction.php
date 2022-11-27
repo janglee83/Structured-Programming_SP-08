@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Order extends Model
+class Transaction extends Model
 {
     use HasFactory;
 
@@ -13,12 +13,12 @@ class Order extends Model
      * The table associated with the model
      * @var string
      */
-    protected $table = 'orders';
+    protected $table = 'transactions';
 
     /**
      * The attributes that are mass assignanle
      *
      * @var array
      */
-    protected $fillable = ['user_id', 'order_date'];
+    protected $fillable = ['order_id', 'user_id', 'method', 'customer_name', 'code', 'money', 'status', 'payment_date'];
 }
