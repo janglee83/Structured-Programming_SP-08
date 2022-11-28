@@ -14,4 +14,9 @@ class CustomerController extends ApiController
     {
         $this->customerRepository = $customerRepository;
     }
+
+    public function store()
+    {
+        return $this->successResponse($this->customerRepository->select(), "Successfully!");
+    }
 }

@@ -3,13 +3,19 @@
 namespace App\Repositories\Eloquent;
 
 use App\Models\Customer;
+use App\Repositories\BaseRepository;
 use App\Repositories\CustomerRepository;
 use App\Repositories\Eloquent\DBRepository;
 
-class DBCustomerRepository extends DBRepository implements CustomerRepository
+class DBCustomerRepository extends BaseRepository implements CustomerRepository
 {
-    function __construct(Customer $model)
+//    function __construct()
+//    {
+//
+//    }
+
+    public function model()
     {
-        parent::__construct($model);
+        return Customer::class;
     }
 }
