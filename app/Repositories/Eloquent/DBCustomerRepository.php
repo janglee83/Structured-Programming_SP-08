@@ -9,13 +9,19 @@ use App\Repositories\Eloquent\DBRepository;
 
 class DBCustomerRepository extends BaseRepository implements CustomerRepository
 {
-//    function __construct()
-//    {
-//
-//    }
-
     public function model()
     {
         return Customer::class;
+    }
+
+    public function getUserData($filter) {
+        return $this->model->select()
+            ->when(isset($filter['user_id']), function ($query) use ($filter) {
+                return $query->where('user_id', $filter['user_id']);
+            })
+            ->when(!empty($filter['name']) && strlen($filter['name']) >= 3, function ($query) use ($filter) {
+                return $query->where('name', 'like', '%'. $filter['name'] .'%');
+            })
+            ->get();
     }
 }

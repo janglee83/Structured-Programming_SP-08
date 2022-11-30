@@ -14,16 +14,17 @@ class CreateTransactionsTable extends Migration
     public function up()
     {
         Schema::create('transactions', function (Blueprint $table) {
-            $table->id();
-            $table->integer('order_id');
-            $table->integer('user_id');
-            $table->char('method', 20);
-            $table->char('customer_name', 50)->nullable();
-            $table->char('code', 20);
+            $table->bigIncrements('id');
+            $table->unsignedBigInteger('order_id');
+            $table->unsignedBigInteger('user_id');
+            $table->string('method', 20);
+            $table->string('customer_name', 50)->nullable();
+            $table->string('code', 20);
             $table->integer('money')->nullable();
-            $table->char('status', 20)->nullable();
+            $table->string('status', 20)->nullable();
             $table->date('payment_date');
-            $table->timestamps();
+            $table->timestamp('created_at')->default(\DB::raw('CURRENT_TIMESTAMP'));
+            $table->timestamp('updated_at')->default(\DB::raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'));
         });
     }
 

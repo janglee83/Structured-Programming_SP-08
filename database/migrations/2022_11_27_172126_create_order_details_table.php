@@ -14,11 +14,12 @@ class CreateOrderDetailsTable extends Migration
     public function up()
     {
         Schema::create('order_details', function (Blueprint $table) {
-            $table->id();
-            $table->integer('order_id');
-            $table->integer('price');
-            $table->integer('price_discount');
-            $table->timestamps();
+            $table->bigIncrements('id');
+            $table->unsignedBigInteger('order_id');
+            $table->integer('price')->default(0);
+            $table->integer('price_discount')->default(0);
+            $table->timestamp('created_at')->default(\DB::raw('CURRENT_TIMESTAMP'));
+            $table->timestamp('updated_at')->default(\DB::raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'));
         });
     }
 
