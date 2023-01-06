@@ -2,6 +2,6 @@
 
 namespace App\Repositories;
 
-interface OrderRepository {
-    
+interface OrderRepository extends RepositoryInterface {
+    public function getOrderData($filter);
 }

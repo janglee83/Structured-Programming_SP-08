@@ -1,8 +1,9 @@
 <?php
 
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\VNPAYController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -20,6 +21,14 @@ Route::group(['middleware' => 'api'], function () {
     Route::prefix('/customers')->group(function () {
         Route::get('/', [CustomerController::class, 'getCustomers']);
         Route::post('/{customer}', [CustomerController::class, 'store']);
+    });
+
+    Route::prefix('/orders')->group(function () {
+        Route::get('/', [OrderController::class, 'getOrders']);
+    });
+
+    Route::prefix('/invoices')->group(function () {
+        Route::get('/', [InvoiceController::class, 'getInvoices']);
     });
 
 //    Route::group(['prefix' => 'checkout'], function () {
