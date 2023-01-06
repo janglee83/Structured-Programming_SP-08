@@ -3,12 +3,17 @@
 namespace App\Repositories\Eloquent;
 
 use App\Models\Transaction;
+use App\Repositories\BaseRepository;
 use App\Repositories\TransactionRepository;
-use App\Repositories\Eloquent\DBRepository;
 
-class DBTransactionRepository extends DBRepository implements TransactionRepository {
-    function __construct(Transaction $model)
+class DBTransactionRepository extends BaseRepository implements TransactionRepository {
+    public function model()
     {
-        parent::__construct($model);
+        return Transaction::class;
+    }
+
+    public function findByPaymentCode($payment_code)
+    {
+        return $this->model->where('payment_code', $payment_code)->first();
     }
 }

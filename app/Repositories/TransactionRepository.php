@@ -2,6 +2,6 @@
 
 namespace App\Repositories;
 
-interface TransactionRepository {
-
+interface TransactionRepository extends RepositoryInterface {
+    public function findByPaymentCode($payment_code);
 }

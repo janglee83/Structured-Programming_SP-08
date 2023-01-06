@@ -20,5 +20,10 @@ class Transaction extends Model
      *
      * @var array
      */
-    protected $fillable = ['order_id', 'user_id', 'method', 'customer_name', 'code', 'money', 'status', 'payment_date'];
+    protected $fillable = ['order_id', 'customer_id', 'method', 'payment_code', 'money', 'status', 'payment_date'];
+
+    public static function generateCode($id, $created_at)
+    {
+        return 'SP' . $id . date('dmy', strtotime($created_at));
+    }
 }

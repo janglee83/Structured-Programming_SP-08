@@ -3,6 +3,7 @@
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\VNPAYController;
 use Illuminate\Support\Facades\Route;
 
@@ -29,17 +30,16 @@ Route::group(['middleware' => 'api'], function () {
 
     Route::prefix('/invoices')->group(function () {
         Route::get('/', [InvoiceController::class, 'getInvoices']);
+        Route::get('/{invoice}/status', [InvoiceController::class, 'status']);
     });
 
-//    Route::group(['prefix' => 'checkout'], function () {
-//        Route::post('/', [CheckoutApiController::class, 'createOrder']);
-//    });
+    Route::prefix('/transactions')->group(function () {
+        Route::get("/", [TransactionController::class, "processPayment"]);
+    });
 
-    Route::prefix('/payment')->group(function () {
-        Route::group(["prefix" => "vnpay"], function () {
-            Route::get('/return', [VNPAYController::class, 'returnVnpay']);
-            Route::get('/ipn', [VNPAYController::class, 'ipn']);
-        });
+    Route::group(["prefix" => "vnpay"], function () {
+        Route::get('/return', [VNPAYController::class, 'return']);
+        Route::get('/ipn', [VNPAYController::class, 'ipn']);
     });
 
 

@@ -22,6 +22,11 @@ class Invoice extends Model
      */
     protected $fillable = ['order_id', 'transaction_id', 'invoice_code', 'total', 'status', 'note', 'paid_at', 'canceled_at'];
 
+    public static function generateCode($id)
+    {
+        return date('ymd') . sprintf("%06d", $id);
+    }
+
     public function order()
     {
         return $this->belongsTo(Order::class, 'order_id');
