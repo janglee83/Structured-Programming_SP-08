@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\VNPAYController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -15,6 +16,22 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::group(['middleware' => 'api'], function() {
-    Route::get('/customers', [CustomerController::class, 'store']);
+Route::group(['middleware' => 'api'], function () {
+    Route::prefix('/customers')->group(function () {
+        Route::get('/', [CustomerController::class, 'getCustomers']);
+        Route::post('/{customer}', [CustomerController::class, 'store']);
+    });
+
+//    Route::group(['prefix' => 'checkout'], function () {
+//        Route::post('/', [CheckoutApiController::class, 'createOrder']);
+//    });
+
+    Route::prefix('/payment')->group(function () {
+        Route::group(["prefix" => "vnpay"], function () {
+            Route::get('/return', [VNPAYController::class, 'returnVnpay']);
+            Route::get('/ipn', [VNPAYController::class, 'ipn']);
+        });
+    });
+
+
 });
