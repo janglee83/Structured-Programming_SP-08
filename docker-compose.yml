@@ -1,0 +1,81 @@
+version: "3.8"
+services:
+    coreService:
+        container_name: coreService
+        build:
+            context: ./coreservice
+            dockerfile: Dockerfile
+        image: coreservice
+        working_dir: /var/www/code
+        entrypoint: /bin/sh -c "composer install &&
+            php artisan key:generate &&
+            php artisan migrate &&
+            php artisan db:seed &&
+            php artisan optimize &&
+            php-fpm"
+        volumes:
+            - ./coreservice:/var/www/code
+        networks:
+            - ltweb-network
+        depends_on:
+            - databaseService
+
+    nginx:
+        container_name: nginx
+        image: nginx:latest
+        ports:
+            - "8081:80"
+        volumes:
+            - ./coreservice:/var/www/code
+            - ./coreservice/nginx.conf:/etc/nginx/conf.d/default.conf
+        networks:
+            - ltweb-network
+        depends_on:
+            - coreService
+
+    databaseService:
+        container_name: databaseService
+        image: postgres:latest
+        env_file:
+            - ./coreservice/.env
+        volumes:
+            - ltweb-database:/data/postgres
+            - ltweb-database:/var/lib/postgresql/data
+        ports:
+            - "5432:5432"
+        networks:
+            - ltweb-network
+
+    apiGatewayService:
+        container_name: apiGatewayService
+        build:
+            context: ./apigatewayservice
+            dockerfile: Dockerfile
+        ports:
+            - "443:8443"
+        image: apigateservice
+        networks:
+            - ltweb-network
+
+    videoCallService:
+        container_name: videoCallService
+        build:
+            context: ./videocallservice
+            dockerfile: Dockerfile
+        env_file:
+            -   ./coreservice/.env
+        ports:
+            - "8082:80"
+        image: videocallservice
+        networks:
+            - ltweb-network
+        depends_on:
+            - databaseService
+            - coreService
+networks:
+    ltweb-network:
+        driver: bridge
+
+volumes:
+    ltweb-database:
+        driver: local
