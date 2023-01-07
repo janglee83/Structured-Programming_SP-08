@@ -58,13 +58,13 @@ class TransactionController extends ApiController
             'invoice_code' => Invoice::generateCode($trans['id']),
         ], $invoice['id']);
 
-        $url = "http://mail.google.com";
-        if ($method === "VNPay") {
-            $url = VNPAYService::create_payment($trans->payment_code, $money, null);
-        } else if ($method === "Shipcode") {
+        if ($method === "vnpayqr" || $method === "vnpay") {
+            $url = VNPAYService::create_payment($trans->payment_code, $money, "");
+        } else if ($method === "shipcode") {
             $url = "http://localhost:8000/api/invoices/" . $invoice['id'] . "/status";
-        }
+        } else
+            $url = "http://localhost:8000/api";
 
-        return redirect($url);
+        return ($url);
     }
 }

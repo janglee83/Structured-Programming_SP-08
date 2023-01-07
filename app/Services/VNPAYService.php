@@ -35,7 +35,7 @@ class VNPAYService
         if (!self::hasKey()) return null;
 
         $vnp_Url = config("vnpay.url");
-        $vnp_Returnurl = config("vnpay.return_url");
+        $vnp_ReturnUrl = config("vnpay.return_url");
         $vnp_TmnCode = config("vnpay.tmn_code");//Mã website tại VNPAY
         $vnp_HashSecret = config("vnpay.hash_secret"); //Chuỗi bí mật
 
@@ -59,7 +59,7 @@ class VNPAYService
             "vnp_Locale" => $vnp_Locale,
             "vnp_OrderInfo" => $vnp_OrderInfo,
             "vnp_OrderType" => $vnp_OrderType,
-            "vnp_ReturnUrl" => $vnp_Returnurl,
+            "vnp_ReturnUrl" => $vnp_ReturnUrl,
             "vnp_TxnRef" => $vnp_TxnRef,
         );
 
@@ -69,25 +69,27 @@ class VNPAYService
         ksort($inputData);
         $query = "";
         $i = 0;
-        $hashdata = "";
+        $hashData = "";
         foreach ($inputData as $key => $value) {
             if ($i == 1) {
-                $hashdata .= '&' . $key . "=" . $value;
+                $hashData .= '&' . $key . "=" . $value;
             } else {
-                $hashdata .= $key . "=" . $value;
+                $hashData .= $key . "=" . $value;
                 $i = 1;
             }
             $query .= urlencode($key) . "=" . urlencode($value) . '&';
         }
 
         $vnp_Url = $vnp_Url . "?" . $query;
+
         if (isset($vnp_HashSecret)) {
             // $vnpSecureHash = md5($vnp_HashSecret . $hashdata);
-            $vnpSecureHash = hash('sha256', $vnp_HashSecret . $hashdata);
-            $vnp_Url .= 'vnp_SecureHashType=SHA256&vnp_SecureHash=' . $vnpSecureHash;
+            $vnpSecureHash = hash('sha256', $vnp_HashSecret . $hashData);
+//            $vnpSecureHash = hash_hmac('sha512', $hashData, $vnp_HashSecret);
+            $vnp_Url .= 'vnp_SecureHashType=SHA512&vnp_SecureHash=' . $vnpSecureHash;
         }
-        dd($vnp_Url);
-        return redirect($vnp_Url);
+
+        return $vnp_Url;
     }
 
 
@@ -131,7 +133,8 @@ class VNPAYService
                 }
             }
 
-            $secureHash = hash_hmac('sha512', $hashData, $vnp_HashSecret);
+//            $secureHash = hash_hmac('sha512', $hashData, $vnp_HashSecret);
+            $secureHash = hash('sha256', $vnp_HashSecret . $hashData);
             $vnpTranId = $inputData['vnp_TransactionNo']; // Mã giao dịch tại VNPAY
             $vnp_BankCode = $inputData['vnp_BankCode']; // Ngân hàng thanh toán
             $vnp_CardType = $inputData['vnp_CardType']; //Hình thức thanh toán
