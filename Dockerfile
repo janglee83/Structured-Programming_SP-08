@@ -29,7 +29,9 @@ COPY . /var/www/code
 RUN useradd -G www-data,root -u $uid -d /home/$user $user
 RUN mkdir -p /home/$user/.composer && \
     chown -R $user:$user /home/$user \
-    && chown -R 33:33 .
+    && chown -R 33:33 . && \
+    chmod -R 777 storage && \
+    chmod -R 777 bootstrap
 # Set working directory
 WORKDIR /var/www/code
 
