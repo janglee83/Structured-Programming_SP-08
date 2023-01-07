@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CreatePaymentRequest;
 use App\Models\Invoice;
 use App\Models\Transaction;
 use App\Repositories\InvoiceRepository;
 use App\Repositories\TransactionRepository;
 use App\Services\VNPAYService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class TransactionController extends ApiController
 {
@@ -29,7 +31,7 @@ class TransactionController extends ApiController
 
         return $trans;
     }
-    public function processPayment(Request $request)
+    public function processPayment(CreatePaymentRequest $request)
     {
         $money = abs($request->money);
         $method = empty($request->payment_method) ? "" : $request->payment_method;
@@ -54,6 +56,7 @@ class TransactionController extends ApiController
             "total" => $money,
             "status" => "new",
         ]);
+
         $invoice = $this->invoiceRepository->update([
             'invoice_code' => Invoice::generateCode($trans['id']),
         ], $invoice['id']);
@@ -63,8 +66,39 @@ class TransactionController extends ApiController
         } else if ($method === "shipcode") {
             $url = "http://localhost:8000/api/invoices/" . $invoice['id'] . "/status";
         } else
-            $url = "http://localhost:8000/api";
+            $url = "http://localhost:8000/";
 
-        return ($url);
+        return $this->successResponse(["url" => $url], "Successfully!");
+    }
+
+//    public function refund(Request $request)
+//    {
+//
+//    }
+
+    public function getTransactions(Request $request)
+    {
+        $filter = $request->only('created_at', 'payment_code', 'status', 'payment_date', 'method', 'type');
+
+        try {
+            $orderData = $this->transactionRepository->getTransactions($filter);
+
+            return $this->successResponse($orderData, "Successfully!");
+        } catch (\Exception $exception) {
+            Log::error("[ERROR]" . $exception->getMessage());
+            return $this->errorResponse([], 'Server error', 500);
+        }
+    }
+
+    public function statistic(Request $request)
+    {
+        try {
+            $data = $this->transactionRepository->getStatistic($request);
+
+            return $this->successResponse($data, "Successfully!");
+        } catch (\Exception $exception) {
+            Log::error("[ERROR]" . $exception->getMessage());
+            return $this->errorResponse([], 'Server error', 500);
+        }
     }
 }

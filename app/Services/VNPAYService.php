@@ -92,7 +92,6 @@ class VNPAYService
         return $vnp_Url;
     }
 
-
     public static function ipn($request, TransactionRepository $transactionRepository)
     {
         /* Payment Notify
@@ -189,4 +188,8 @@ class VNPAYService
 
         return $returnData;
     }
+
+//    public static function refund($code, $money, $bankcode) {
+//
+//    }
 }

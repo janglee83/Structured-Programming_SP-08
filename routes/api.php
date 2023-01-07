@@ -34,7 +34,9 @@ Route::group(['middleware' => 'api'], function () {
     });
 
     Route::prefix('/transactions')->group(function () {
-        Route::get("/", [TransactionController::class, "processPayment"]);
+        Route::post("/", [TransactionController::class, "processPayment"]);
+        Route::get("/", [TransactionController::class, "getTransactions"]);
+        Route::get("/statistic", [TransactionController::class, "statistic"]);
     });
 
     Route::group(["prefix" => "vnpay"], function () {
