@@ -25,14 +25,6 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-RUN apt-get install -y nginx  supervisor && \
-    rm -rf /var/lib/apt/lists/*
-
-COPY . /var/www/html
-WORKDIR /var/www/html
-
-RUN rm /etc/nginx/sites-enabled/default
-
 COPY /nginx.conf /etc/nginx/conf.d/default.conf
 
 # Create system user to run Composer and Artisan Commands
