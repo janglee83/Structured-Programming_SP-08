@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\VNPAYController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -22,15 +24,25 @@ Route::group(['middleware' => 'api'], function () {
         Route::post('/{customer}', [CustomerController::class, 'store']);
     });
 
-//    Route::group(['prefix' => 'checkout'], function () {
-//        Route::post('/', [CheckoutApiController::class, 'createOrder']);
-//    });
+    Route::prefix('/orders')->group(function () {
+        Route::get('/', [OrderController::class, 'getOrders']);
+    });
 
-    Route::prefix('/payment')->group(function () {
-        Route::group(["prefix" => "vnpay"], function () {
-            Route::get('/return', [VNPAYController::class, 'returnVnpay']);
-            Route::get('/ipn', [VNPAYController::class, 'ipn']);
-        });
+    Route::prefix('/invoices')->group(function () {
+        Route::get('/', [InvoiceController::class, 'getInvoices']);
+        Route::get('/{invoice_id}/status', [InvoiceController::class, 'status']);
+    });
+
+    Route::prefix('/transactions')->group(function () {
+        Route::post("/", [TransactionController::class, "processPayment"]);
+        Route::get("/", [TransactionController::class, "getTransactions"]);
+        Route::post("/refund", [TransactionController::class, "refund"]);
+        Route::get("/statistic", [TransactionController::class, "statistic"]);
+    });
+
+    Route::group(["prefix" => "vnpay"], function () {
+        Route::get('/return', [VNPAYController::class, 'return']);
+        Route::get('/ipn', [VNPAYController::class, 'ipn']);
     });
 
 

@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class OrderDetail extends Model
+class Product extends Model
 {
     use HasFactory;
 
@@ -13,17 +13,13 @@ class OrderDetail extends Model
      * The table associated with the model
      * @var string
      */
-    protected $table = 'order_details';
+    protected $table = 'products';
 
     /**
      * The attributes that are mass assignanle
      *
      * @var array
      */
-    protected $fillable = ['order_id', 'price', 'price_discount', 'quantity', 'product_id'];
+    protected $fillable = ['name', 'color', 'size', 'price', 'price_discount'];
 
-    public function product()
-    {
-        return $this->belongsTo(Product::class, "product_id");
-    }
 }

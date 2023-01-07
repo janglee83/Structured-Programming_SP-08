@@ -21,4 +21,9 @@ class Order extends Model
      * @var array
      */
     protected $fillable = ['user_id', 'order_date'];
+
+    public function order_details()
+    {
+        return $this->hasMany(OrderDetail::class, 'order_id');
+    }
 }

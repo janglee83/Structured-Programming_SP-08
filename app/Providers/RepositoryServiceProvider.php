@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Repositories\Eloquent\DBInvoiceRepository;
+use App\Repositories\InvoiceRepository;
 use Illuminate\Support\ServiceProvider;
 use App\Repositories\CustomerRepository;
 use App\Repositories\Eloquent\DBCustomerRepository;
@@ -25,6 +27,7 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(OrderDetailRepository::class, DBOrderDetailRepository::class);
         $this->app->bind(OrderRepository::class, DBOrderRepository::class);
         $this->app->bind(TransactionRepository::class, DBTransactionRepository::class);
+        $this->app->bind(InvoiceRepository::class, DBInvoiceRepository::class);
     }
 
     /**
