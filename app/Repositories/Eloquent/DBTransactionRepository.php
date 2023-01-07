@@ -5,6 +5,7 @@ namespace App\Repositories\Eloquent;
 use App\Models\Transaction;
 use App\Repositories\BaseRepository;
 use App\Repositories\TransactionRepository;
+use Illuminate\Support\Facades\DB;
 
 class DBTransactionRepository extends BaseRepository implements TransactionRepository {
     public function model()
@@ -17,7 +18,7 @@ class DBTransactionRepository extends BaseRepository implements TransactionRepos
         return $this->model->where('payment_code', $payment_code)->first();
     }
 
-    public function getTransactions($filter)
+    public function getTransactions($filter, $limit = 10)
     {
         return $this->model->select()
             ->when(isset($filter['created_at']), function ($query) use ($filter) {
@@ -38,7 +39,7 @@ class DBTransactionRepository extends BaseRepository implements TransactionRepos
             ->when(isset($filter['type']), function ($query) use ($filter) {
                 return $query->where('type', $filter['type']);
             })
-            ->get();
+            ->paginate($limit);
     }
 
 
@@ -55,5 +56,13 @@ class DBTransactionRepository extends BaseRepository implements TransactionRepos
             'pay' => $pay,
             'refund' => $refund
         ];
+    }
+
+    public function getStatisticByPaymentMethod($filter)
+    {
+        return $this->model->get()
+            ->countBy(function ($item) {
+                return $item['method'];
+            });
     }
 }

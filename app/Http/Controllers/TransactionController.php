@@ -9,6 +9,7 @@ use App\Repositories\InvoiceRepository;
 use App\Repositories\TransactionRepository;
 use App\Services\VNPAYService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class TransactionController extends ApiController
@@ -61,9 +62,13 @@ class TransactionController extends ApiController
             'invoice_code' => Invoice::generateCode($trans['id']),
         ], $invoice['id']);
 
-        if ($method === "vnpayqr" || $method === "vnpay") {
-            $url = VNPAYService::create_payment($trans->payment_code, $money, "");
+        if ($method === "vnpayqr" || $method === "vnpay" || $method === "atm") {
+            $url = VNPAYService::create_payment($trans->payment_code, $money, "vnpayqr");
         } else if ($method === "shipcode") {
+            // TODO:
+//            Http::post('SP_01:orderManagement/chuathanhtoan', [
+//                'status' => ,
+//            ]);
             $url = "http://localhost:8000/api/invoices/" . $invoice['id'] . "/status";
         } else
             $url = "http://localhost:8000/";
@@ -71,10 +76,10 @@ class TransactionController extends ApiController
         return $this->successResponse(["url" => $url], "Successfully!");
     }
 
-//    public function refund(Request $request)
-//    {
-//
-//    }
+    public function refund(Request $request)
+    {
+
+    }
 
     public function getTransactions(Request $request)
     {
@@ -93,9 +98,13 @@ class TransactionController extends ApiController
     public function statistic(Request $request)
     {
         try {
-            $data = $this->transactionRepository->getStatistic($request);
+            $transaction = $this->transactionRepository->getStatistic($request);
+            $payment_method = $this->transactionRepository->getStatisticByPaymentMethod($request);
 
-            return $this->successResponse($data, "Successfully!");
+            return $this->successResponse([
+                'transaction' => $transaction,
+                'method' => $payment_method
+            ], "Successfully!");
         } catch (\Exception $exception) {
             Log::error("[ERROR]" . $exception->getMessage());
             return $this->errorResponse([], 'Server error', 500);

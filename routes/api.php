@@ -30,12 +30,13 @@ Route::group(['middleware' => 'api'], function () {
 
     Route::prefix('/invoices')->group(function () {
         Route::get('/', [InvoiceController::class, 'getInvoices']);
-        Route::get('/{invoice}/status', [InvoiceController::class, 'status']);
+        Route::get('/{invoice_id}/status', [InvoiceController::class, 'status']);
     });
 
     Route::prefix('/transactions')->group(function () {
         Route::post("/", [TransactionController::class, "processPayment"]);
         Route::get("/", [TransactionController::class, "getTransactions"]);
+        Route::post("/refund", [TransactionController::class, "refund"]);
         Route::get("/statistic", [TransactionController::class, "statistic"]);
     });
 
