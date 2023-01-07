@@ -8,6 +8,8 @@ services:
         image: sp08server
         working_dir: /var/www/code
         entrypoint: /bin/sh -c "composer install &&
+            chmod -R 777 storage &&
+            chmod -R 777 bootstrap &&
             php artisan key:generate &&
             php artisan migrate &&
             php artisan db:seed &&
