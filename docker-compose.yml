@@ -1,0 +1,54 @@
+version: "3.8"
+services:
+    sp08-server:
+        container_name: sp08-server
+        build:
+            context: .
+            dockerfile: Dockerfile
+        image: sp08server
+        entrypoint: /bin/sh -c "composer install &&
+            php artisan key:generate &&
+            php artisan migrate &&
+            php artisan db:seed &&
+            php artisan optimize &&
+            php-fpm"
+        volumes:
+            - ./:/var/www/html
+        networks:
+            - ltct-network
+        depends_on:
+            - sp08-db
+
+    nginx:
+        container_name: nginx
+        image: nginx:latest
+        ports:
+            - "8088:80"
+        volumes:
+            - .:/var/www/html
+            - ./nginx.conf:/etc/nginx/conf.d/default.conf
+        networks:
+            - ltct-network
+        depends_on:
+            - sp08-server
+
+    sp08-db:
+        container_name: sp08-db
+        image: mysql:latest
+        command: --default-authentication-plugin=mysql_native_password
+        volumes:
+            - ltct-database:/var/lib/mysql
+        ports:
+            - "3306:3306"
+        environment:
+            MYSQL_DATABASE: ltct_be
+            MYSQL_ROOT_PASSWORD: 123456
+        networks:
+            - ltct-network
+networks:
+    ltct-network:
+        driver: bridge
+
+volumes:
+    ltct-database:
+        driver: local
