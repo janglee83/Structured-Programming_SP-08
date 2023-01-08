@@ -22,6 +22,7 @@ class CreateTransactionsTable extends Migration
             $table->integer('money');
             $table->string('type', 20)->default("pay");
             $table->string('status', 20)->nullable();
+            $table->string('bank_code', 20)->nullable();
             $table->dateTime('payment_date')->nullable();
             $table->timestamp('created_at')->default(\DB::raw('CURRENT_TIMESTAMP'));
             $table->timestamp('updated_at')->default(\DB::raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'));

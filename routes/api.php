@@ -34,10 +34,14 @@ Route::group(['middleware' => 'api'], function () {
     });
 
     Route::prefix('/transactions')->group(function () {
-        Route::post("/", [TransactionController::class, "processPayment"]);
         Route::get("/", [TransactionController::class, "getTransactions"]);
+        Route::get("/by-payment-code", [TransactionController::class, "getTransactionByPaymentCode"]);
+        Route::get("/by-order", [TransactionController::class, "getTransactionByOrder"]);
+
+        Route::post("/", [TransactionController::class, "processPayment"]);
         Route::post("/refund", [TransactionController::class, "refund"]);
-        Route::get("/statistic", [TransactionController::class, "statistic"]);
+
+        Route::put("/{transaction}/status", [TransactionController::class, "changeStatus"]);
     });
 
     Route::group(["prefix" => "vnpay"], function () {
@@ -45,5 +49,10 @@ Route::group(['middleware' => 'api'], function () {
         Route::get('/ipn', [VNPAYController::class, 'ipn']);
     });
 
-
+    Route::prefix('/admin')->group(function () {
+        Route::prefix("/transactions")->group(function () {
+            Route::get("/", [TransactionController::class, "getTransactions"]);
+            Route::get("/statistic", [TransactionController::class, "statistic"]);
+        });
+    });
 });

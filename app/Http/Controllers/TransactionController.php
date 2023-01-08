@@ -36,48 +36,63 @@ class TransactionController extends ApiController
     {
         $money = abs($request->money);
         $method = empty($request->payment_method) ? "" : $request->payment_method;
+        $orderId = $request->order_id;
 
-        if ($method != "Shipcode") {
-            $trans_data = [
-                'customer_id' => $request->customer_id,
-                'status' => 'pending',
-                "order_id" => $request->order_id,
-                'method' => $method,
-                'money' => $money,
-                'payment_date' => now()
-            ];
+        $trans_data = [
+            'customer_id' => $request->customer_id,
+            'status' => 'pending',
+            "order_id" => $orderId,
+            'method' => $method,
+            'money' => $money,
+            'payment_date' => now()
+        ];
 
-            $trans = $this->createTransaction($trans_data);
-        }
+        $trans = $this->createTransaction($trans_data);
 
-        $invoice = $this->invoiceRepository->create([
-            "order_id" => $request->order_id,
-            "invoice_code" => "123",
-            "transaction_id" => $trans['id'],
-            "total" => $money,
-            "status" => "new",
-        ]);
+        // TODO: tạo hóa đơn
+//        $invoice = $this->invoiceRepository->create([
+//            "order_id" => $request->order_id,
+//            "invoice_code" => "123",
+//            "transaction_id" => $trans['id'],
+//            "total" => $money,
+//            "status" => "new",
+//        ]);
+//
+//        $invoice = $this->invoiceRepository->update([
+//            'invoice_code' => Invoice::generateCode($trans['id']),
+//        ], $invoice['id']);
 
-        $invoice = $this->invoiceRepository->update([
-            'invoice_code' => Invoice::generateCode($trans['id']),
-        ], $invoice['id']);
-
-        if ($method === "vnpayqr" || $method === "vnpay" || $method === "atm") {
-            $url = VNPAYService::create_payment($trans->payment_code, $money, "vnpayqr");
+        if ($method === "vnpay") {
+            $url = VNPAYService::create_payment($trans->payment_code, $money, "VNPAYQR");
         } else if ($method === "shipcode") {
-            // TODO:
-//            Http::post('SP_01:orderManagement/chuathanhtoan', [
-//                'status' => ,
-//            ]);
-            $url = "http://localhost:8000/api/invoices/" . $invoice['id'] . "/status";
+            // TODO: Đổi trạng thái hóa đơn
+            Http::post('SP_01:api/'. $orderId .'/capnhattrangthai', [
+                'status' => "unpaid"
+            ]);
+            $url = config('frontend.url') . "/invoices/" . $orderId . "/status";
         } else
-            $url = "http://localhost:8000/";
+//            INTCARD
+            $url = VNPAYService::create_payment($trans->payment_code, $money, "VNBANK");
 
         return $this->successResponse(["url" => $url], "Successfully!");
     }
 
     public function refund(Request $request)
     {
+        $money = abs($request->money);
+        $paymentCode = $request->payment_code;
+        $orderId = $request->order_id;
+        // TODO:: tìm payment_code
+
+        $trans = $this->transactionRepository->findByPaymentCode($paymentCode);
+
+        if (!empty($trans)) {
+            $url = VNPAYService::refund("03", $paymentCode, $money, $trans->payment_date);
+        } else {
+            $url = config('frontend.transaction-fail');
+        }
+
+        return $this->successResponse(["url" => $url], "Successfully!");
 
     }
 
@@ -86,9 +101,9 @@ class TransactionController extends ApiController
         $filter = $request->only('created_at', 'payment_code', 'status', 'payment_date', 'method', 'type');
 
         try {
-            $orderData = $this->transactionRepository->getTransactions($filter);
+            $transactionData = $this->transactionRepository->getTransactions($filter);
 
-            return $this->successResponse($orderData, "Successfully!");
+            return $this->successResponse($transactionData, "Successfully!");
         } catch (\Exception $exception) {
             Log::error("[ERROR]" . $exception->getMessage());
             return $this->errorResponse([], 'Server error', 500);
@@ -97,14 +112,63 @@ class TransactionController extends ApiController
 
     public function statistic(Request $request)
     {
+        $filter = [
+            'start_at' => empty($request->start_at) ? null : $request->start_at,
+            'end_at' => empty($request->end_at) ? null : $request->end_at
+        ];
+
         try {
-            $transaction = $this->transactionRepository->getStatistic($request);
-            $payment_method = $this->transactionRepository->getStatisticByPaymentMethod($request);
+            $transaction = $this->transactionRepository->getStatistic($filter);
+            $payment_method = $this->transactionRepository->getStatisticByPaymentMethod($filter);
 
             return $this->successResponse([
                 'transaction' => $transaction,
                 'method' => $payment_method
             ], "Successfully!");
+        } catch (\Exception $exception) {
+            Log::error("[ERROR]" . $exception->getMessage());
+            return $this->errorResponse([], 'Server error', 500);
+        }
+    }
+
+    public function getTransactionByPaymentCode(Request $request)
+    {
+        $paymentCode = $request->payment_code;
+
+        try {
+            $transactionData = $this->transactionRepository->findByPaymentCode($paymentCode);
+
+            return $this->successResponse($transactionData, "Successfully!");
+        } catch (\Exception $exception) {
+            Log::error("[ERROR]" . $exception->getMessage());
+            return $this->errorResponse([], 'Server error', 500);
+        }
+    }
+
+    public function getTransactionByOrder(Request $request)
+    {
+        $orderId = $request->order_id;
+
+        try {
+            $transactionData = $this->transactionRepository->findByOrderId($orderId);
+
+            return $this->successResponse($transactionData, "Successfully!");
+        } catch (\Exception $exception) {
+            Log::error("[ERROR]" . $exception->getMessage());
+            return $this->errorResponse([], 'Server error', 500);
+        }
+    }
+
+    public function changeStatus(Request $request, Transaction $transaction)
+    {
+
+        try {
+            if (!empty($request->status) && $request->status === "paid") {
+                $transaction = $this->transactionRepository->update([
+                    "status" => $request->status
+                ], $transaction['id']);
+            }
+            return $this->successResponse($transaction, "Successfully!");
         } catch (\Exception $exception) {
             Log::error("[ERROR]" . $exception->getMessage());
             return $this->errorResponse([], 'Server error', 500);

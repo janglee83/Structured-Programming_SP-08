@@ -18,6 +18,11 @@ class DBTransactionRepository extends BaseRepository implements TransactionRepos
         return $this->model->where('payment_code', $payment_code)->first();
     }
 
+    public function findByOrderId($order_id)
+    {
+        return $this->model->where('order_id', $order_id)->get();
+    }
+
     public function getTransactions($filter, $limit = 10)
     {
         return $this->model->select()
@@ -45,10 +50,38 @@ class DBTransactionRepository extends BaseRepository implements TransactionRepos
 
     public function getStatistic($filter)
     {
-        $success = $this->model->select()->where('status', 'success')->count();
-        $fail = $this->model->select()->where('status', '!=', 'success')->count();
-        $pay = $this->model->select()->where('type', 'pay')->count();
-        $refund = $this->model->select()->where('type', 'refund')->count();
+        $success = $this->model->select()->where('status', 'success')
+            ->when(isset($filter['start_at']), function ($query) use ($filter) {
+                return $query->whereDate('created_at', ">=", $filter['start_at']);
+            })
+            ->when(isset($filter['end_at']), function ($query) use ($filter) {
+                return $query->whereDate('created_at', "<=", $filter['end_at']);
+            })
+            ->count();
+        $fail = $this->model->select()->where('status', '!=', 'success')
+            ->when(isset($filter['start_at']), function ($query) use ($filter) {
+                return $query->whereDate('created_at', ">=", $filter['start_at']);
+            })
+            ->when(isset($filter['end_at']), function ($query) use ($filter) {
+                return $query->whereDate('created_at', "<=", $filter['end_at']);
+            })
+            ->count();
+        $pay = $this->model->select()->where('type', 'pay')
+            ->when(isset($filter['start_at']), function ($query) use ($filter) {
+                return $query->whereDate('created_at', ">=", $filter['start_at']);
+            })
+            ->when(isset($filter['end_at']), function ($query) use ($filter) {
+                return $query->whereDate('created_at', "<=", $filter['end_at']);
+            })
+            ->count();
+        $refund = $this->model->select()->where('type', 'refund')
+            ->when(isset($filter['start_at']), function ($query) use ($filter) {
+                return $query->whereDate('created_at', ">=", $filter['start_at']);
+            })
+            ->when(isset($filter['end_at']), function ($query) use ($filter) {
+                return $query->whereDate('created_at', "<=", $filter['end_at']);
+            })
+            ->count();
 
         return [
             'success' => $success,
@@ -60,7 +93,14 @@ class DBTransactionRepository extends BaseRepository implements TransactionRepos
 
     public function getStatisticByPaymentMethod($filter)
     {
-        return $this->model->get()
+        return $this->model
+            ->when(isset($filter['start_at']), function ($query) use ($filter) {
+                return $query->whereDate('created_at', ">=", $filter['start_at']);
+            })
+            ->when(isset($filter['end_at']), function ($query) use ($filter) {
+                return $query->whereDate('created_at', "<=", $filter['end_at']);
+            })
+            ->get()
             ->countBy(function ($item) {
                 return $item['method'];
             });

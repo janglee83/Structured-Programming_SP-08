@@ -18,6 +18,6 @@ Route::get('/', function () {
     return view('welcome');
 });
 Route::group(["prefix" => "vnpay"], function () {
-    Route::get('/return', [VNPAYController::class, 'returnVnpay']);
+    Route::get('/return', [VNPAYController::class, 'return']);
     Route::get('/ipn', [VNPAYController::class, 'ipn']);
 });
