@@ -22,7 +22,7 @@ class CreateCustomersTable extends Migration
             $table->string('district', 50)->nullable();
             $table->string('town', 50)->nullable();
             $table->string('address', 100)->nullable();
-            $table->integer('phone')->nullable();
+            $table->string('phone', 20)->nullable();
             $table->timestamp('created_at')->default(\DB::raw('CURRENT_TIMESTAMP'));
             $table->timestamp('updated_at')->default(\DB::raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'));
         });
@@ -35,6 +35,6 @@ class CreateCustomersTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('customer');
+        Schema::dropIfExists('customers');
     }
 }

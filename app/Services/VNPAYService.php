@@ -152,13 +152,14 @@ class VNPAYService
                 $transaction = $transactionRepository->findByPaymentCode($transactionCode);
                 if (!empty($transaction)) {
                     if (!empty($transaction["status"]) && ($transaction["status"]) == "pending") {
-                        if ($transaction["money"] == $money) //Kiểm tra số tiền thanh toán của giao dịch: giả sử số tiền kiểm tra là đúng. //$order["Amount"] == $vnp_Amount
+                        if ($transaction["money"] == $money) // Kiểm tra số tiền thanh toán của giao dịch: giả sử số tiền kiểm tra là đúng. //$order["Amount"] == $vnp_Amount
                         {
                             if ($inputData['vnp_ResponseCode'] == '00' || $inputData['vnp_TransactionStatus'] == '00') {
                                 // Trạng thái thanh toán thành công
                                 $status = "paid";
                                 $transactionRepository->update([
-                                    'status' => 'success'
+                                    'status' => 'success',
+                                    'bank_code' => $vnp_BankCode
                                 ], $transaction['id']);
                             } else {
                                 // Trạng thái thanh toán thất bại / lỗi
@@ -169,10 +170,9 @@ class VNPAYService
                             }
 
                             //Cài đặt Code cập nhật kết quả thanh toán, tình trạng đơn hàng vào DB
-                            //
-                            // TODO:
-                            Http::post('SP_01:orderManagement/chuathanhtoan', [
-                                'status' => $status,
+                            // TODO: cập nhật trạng thái đơn hàng
+                            Http::post('SP_01:api/'. $transaction['order_id'] .'/capnhattrangthai', [
+                                'status' => $status
                             ]);
 
                             //Trả kết quả về cho VNPAY: Website/APP TMĐT ghi nhận yêu cầu thành công

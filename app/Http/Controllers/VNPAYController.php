@@ -20,11 +20,12 @@ class VNPAYController extends Controller
     public function return(Request $request)
     {
         $transactionCode = $request->vnp_TxnRef;
-        $method = $request->vnp_CardType;
+//        $cardType = $request->vnp_CardType;
+        $bankCode = $request->vnp_BankCode;
         $transaction = $this->transactionRepository->findByPaymentCode($transactionCode);
 
         if (!empty($transaction)) {
-            return $this->transactionRepository->update(["method" => strtolower($method)], $transaction->id);
+            return $this->transactionRepository->update(["bank_code" => strtolower($bankCode)], $transaction->id);
         }
 
         return redirect('/transactions/' . $transaction->id . 'status/');
