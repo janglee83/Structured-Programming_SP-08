@@ -17,9 +17,9 @@ class CreateTransactionsTable extends Migration
             $table->bigIncrements('id');
             $table->unsignedBigInteger('customer_id');
             $table->unsignedBigInteger('order_id');
-            $table->string('method', 20);
+            $table->string('method', 20)->default("atm");
             $table->string('payment_code')->nullable();
-            $table->integer('money');
+            $table->integer('money')->default("0");
             $table->string('type', 20)->default("pay");
             $table->string('status', 20)->nullable();
             $table->string('bank_code', 20)->nullable();
