@@ -3,12 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\CreatePaymentRequest;
-use App\Models\Invoice;
 use App\Models\Transaction;
 use App\Repositories\InvoiceRepository;
 use App\Repositories\TransactionRepository;
 use App\Services\VNPAYService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -161,7 +161,6 @@ class TransactionController extends ApiController
 
     public function changeStatus(Request $request, Transaction $transaction)
     {
-
         try {
             if (!empty($request->status) && $request->status === "paid") {
                 $transaction = $this->transactionRepository->update([
@@ -169,6 +168,95 @@ class TransactionController extends ApiController
                 ], $transaction['id']);
             }
             return $this->successResponse($transaction, "Successfully!");
+        } catch (\Exception $exception) {
+            Log::error("[ERROR]" . $exception->getMessage());
+            return $this->errorResponse([], 'Server error', 500);
+        }
+    }
+
+    public function statisticByMonth(Request $request)
+    {
+        $filter = [
+            'start_at' => empty($request->start_at) ? Carbon::now()->subMonths(5) : $request->start_at,
+            'end_at' => empty($request->end_at) ? Carbon::now() : $request->end_at
+        ];
+
+        $filter = [
+            "start_at" => Carbon::parse($filter['start_at'])->startOfMonth(),
+            "end_at" => Carbon::parse($filter['end_at'])->endOfMonth(),
+        ];
+
+        try {
+            $transactionsByMonth = $this->transactionRepository->getStatisticByMonth($filter);
+
+            // Initialize the results array
+            $results = [];
+            $month = $filter['start_at'];
+            for ($i = 1; $i <= 6; $i++) {
+                $results[$month->format('Y-m')] = [
+                    'successful' => 0,
+                    'failed' => 0,
+                    'total' => 0,
+                    'success_percentage' => 0,
+                ];
+                $month = $month->addMonth();
+            }
+
+            // Loop through the transactions and populate the results array
+            foreach ($transactionsByMonth as $transaction) {
+                $month = $transaction->month;
+                if ($transaction->status == 'successful') {
+                    $results[$month]['successful'] = $transaction->count;
+                } else if ($transaction->status == 'failed') {
+                    $results[$month]['failed'] = $transaction->count;
+                }
+                $results[$month]['total'] = $results[$month]['successful'] + $results[$month]['failed'];
+                if ($results[$month]['total'] > 0) {
+                    $results[$month]['success_percentage'] = $results[$month]['successful'] / $results[$month]['total'] * 100;
+                }
+            }
+
+            return $this->successResponse($results, "Successfully!");
+        } catch (\Exception $exception) {
+            Log::error("[ERROR]" . $exception->getMessage());
+            return $this->errorResponse([], 'Server error', 500);
+        }
+    }
+
+    public function statisticPayAndRefund(Request $request)
+    {
+        $filter = [
+            'start_at' => empty($request->start_at) ? Carbon::now()->subMonths(1) : $request->start_at,
+            'end_at' => empty($request->end_at) ? Carbon::now() : $request->end_at
+        ];
+
+        try {
+            $transaction = $this->transactionRepository->getStatisticPayAndRefund($filter);
+            $data = [
+                'total_revenue' => (int) $transaction['total_revenue'],
+                'total_cashback' => (int) $transaction['total_cashback']
+            ];
+
+            // Initialize the results array
+            $results = [];
+            $day = Carbon::parse($filter['start_at']);
+            $dayOfMonth = Carbon::parse($filter['end_at'])->diffInDays(Carbon::parse($filter['start_at']));
+            for ($i = 0; $i <= $dayOfMonth; $i++) {
+                $results[$day->format('m-d')] = [
+                    'pay' => 0,
+                    'refund' => 0,
+                ];
+                $day = $day->addDays();
+            }
+
+            // Loop through the transactions and populate the results array
+            foreach ($transaction['transactions'] as $transaction) {
+                $day = $transaction->day;
+                $results[$day][$transaction->type] = (int) $transaction->total;
+            }
+            $data['results'] = $results;
+
+            return $this->successResponse($data, "Successfully!");
         } catch (\Exception $exception) {
             Log::error("[ERROR]" . $exception->getMessage());
             return $this->errorResponse([], 'Server error', 500);

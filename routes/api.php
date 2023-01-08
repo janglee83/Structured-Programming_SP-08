@@ -53,6 +53,8 @@ Route::group(['middleware' => 'api'], function () {
         Route::prefix("/transactions")->group(function () {
             Route::get("/", [TransactionController::class, "getTransactions"]);
             Route::get("/statistic", [TransactionController::class, "statistic"]);
+            Route::get("/statistic-by-month", [TransactionController::class, "statisticByMonth"]);
+            Route::get("/statistic-pay-and-refund", [TransactionController::class, "statisticPayAndRefund"]);
         });
     });
 });
