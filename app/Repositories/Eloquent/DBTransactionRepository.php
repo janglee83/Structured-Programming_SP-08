@@ -102,6 +102,8 @@ class DBTransactionRepository extends BaseRepository implements TransactionRepos
     public function getStatisticByPaymentMethod($filter)
     {
         return $this->model
+            ->where("type", "pay")
+            ->where("status", "successful")
             ->when(isset($filter['start_at']), function ($query) use ($filter) {
                 return $query->whereDate('created_at', ">=", $filter['start_at']);
             })
@@ -133,18 +135,21 @@ class DBTransactionRepository extends BaseRepository implements TransactionRepos
     {
         // Calculate the total revenue for the past month
         $totalRevenue = $this->model->where('type', 'pay')
+            ->where("status", "successful")
             ->where('created_at', '>=', $filter['start_at'])
             ->where('created_at', '<=', $filter['end_at'])
             ->sum('money');
 
         // Calculate the total cashback for the past month
         $totalCashback = $this->model->where('type', 'refund')
+            ->where("status", "successful")
             ->where('created_at', '>=', $filter['start_at'])
             ->where('created_at', '<=', $filter['end_at'])
             ->sum('money');
 
         // Group the transactions by day and type
         $transactionsByDay = $this->model
+            ->where("status", "successful")
             ->where('created_at', '>=', $filter['start_at'])
             ->where('created_at', '<=', $filter['end_at'])
             ->selectRaw("DATE_FORMAT(created_at, '%m-%d') as day, type, sum(money) as total")

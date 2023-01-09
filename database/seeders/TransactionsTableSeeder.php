@@ -15,21 +15,94 @@ class TransactionsTableSeeder extends Seeder
      */
     public function run()
     {
-        $methods = ['atm', 'vnpay', 'shipcode'];
-        $status = ['successful', 'failed', 'pending'];
-        for ($i = 1; $i <= 3; $i++) {
-            $s = $status[mt_rand(0, 2)];
-            Transaction::create([
-                'order_id' => $i,
-                'customer_id' => $i,
-                'method' => $methods[mt_rand(0, 2)],
-                'payment_code' => Transaction::generateCode($i, now()),
-                'money' => 10000,
-                'status' => $s,
-                'payment_date' => $s === 'successfil' ? now() : null,
-                'type' => 'pay',
-                'bank_code' => 'vietcombank'
-            ]);
+        $transactions =  [
+            [
+                "id" => 1,
+              "customer_id" => 1,
+              "order_id" => 1,
+              "method" => "atm",
+              "payment_code" => "SP120230108",
+              "money" => 10000,
+              "type" => "pay",
+              "status" => "successful",
+              "bank_code" => "vietcombank",
+              "payment_date" => null,
+              "created_at" => "2023-01-08T13:55:19.000000Z",
+              "updated_at" => "2023-01-08T13:55:19.000000Z"
+            ],
+            [
+                "id" => 2,
+              "customer_id" => 2,
+              "order_id" => 2,
+              "method" => "atm",
+              "payment_code" => "SP220230108",
+              "money" => 10000,
+              "type" => "pay",
+              "status" => "failed",
+              "bank_code" => "vietcombank",
+              "payment_date" => null,
+              "created_at" => "2023-01-08T13:55:19.000000Z",
+              "updated_at" => "2023-01-08T13:55:19.000000Z"
+            ],
+            [
+                "id" => 3,
+              "customer_id" => 3,
+              "order_id" => 3,
+              "method" => "shipcod",
+              "payment_code" => "SP320230108",
+              "money" => 10000,
+              "type" => "pay",
+              "status" => "pending",
+              "bank_code" => "",
+              "payment_date" => null,
+              "created_at" => "2023-01-08T13:55:19.000000Z",
+              "updated_at" => "2023-01-08T13:55:19.000000Z"
+            ],
+            [
+                "id" => 4,
+              "customer_id" => 2,
+              "order_id" => 4,
+              "method" => "vnpay",
+              "payment_code" => "SP420230105",
+              "money" => 58000,
+              "type" => "pay",
+              "status" => "successful",
+              "bank_code" => "viettinbank",
+              "payment_date" => null,
+              "created_at" => "2023-01-05T13:55:19.000000Z",
+              "updated_at" => "2023-01-05T13:55:19.000000Z"
+            ],
+            [
+                "id" => 5,
+              "customer_id" => 3,
+              "order_id" => 5,
+              "method" => "vnpay",
+              "payment_code" => "SP520230105",
+              "money" => 18000,
+              "type" => "refund",
+              "status" => "successful",
+              "bank_code" => "viettinbank",
+              "payment_date" => null,
+              "created_at" => "2023-01-05T13:55:19.000000Z",
+              "updated_at" => "2023-01-05T13:55:19.000000Z"
+            ],
+            [
+                "id" => 6,
+              "customer_id" => 3,
+              "order_id" => 6,
+              "method" => "shipcod",
+              "payment_code" => "SP320230106",
+              "money" => 105000,
+              "type" => "pay",
+              "status" => "successful",
+              "bank_code" => "",
+              "payment_date" => null,
+              "created_at" => "2023-01-06T13:55:19.000000Z",
+              "updated_at" => "2023-01-06T13:55:19.000000Z"
+            ]
+        ];
+        foreach ($transactions as $transaction) {
+            Transaction::create($transaction);
         }
     }
 }

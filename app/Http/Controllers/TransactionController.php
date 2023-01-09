@@ -34,8 +34,8 @@ class TransactionController extends ApiController
     }
     public function processPayment(CreatePaymentRequest $request)
     {
-        $money = abs($request->money);
-        $method = empty($request->payment_method) ? "" : $request->payment_method;
+        $money = $request->money;
+        $method = $request->payment_method ?? "";
         $orderId = $request->order_id;
 
         $trans_data = [
@@ -49,30 +49,17 @@ class TransactionController extends ApiController
 
         $trans = $this->createTransaction($trans_data);
 
-        // TODO: tạo hóa đơn
-//        $invoice = $this->invoiceRepository->create([
-//            "order_id" => $request->order_id,
-//            "invoice_code" => "123",
-//            "transaction_id" => $trans['id'],
-//            "total" => $money,
-//            "status" => "new",
-//        ]);
-//
-//        $invoice = $this->invoiceRepository->update([
-//            'invoice_code' => Invoice::generateCode($trans['id']),
-//        ], $invoice['id']);
-
         if ($method === "vnpay") {
             $url = VNPAYService::create_payment($trans->payment_code, $money, "VNPAYQR");
-        } else if ($method === "shipcode") {
-            // TODO: Đổi trạng thái hóa đơn
-            Http::post('SP_01:api/'. $orderId .'/capnhattrangthai', [
+        } else if ($method === "shipcod") {
+            // TODO: Lấy API SP_01
+            Http::post('SP_01:api/' . $orderId . '/capnhattrangthai', [
                 'status' => "unpaid"
             ]);
-            $url = config('frontend.url') . "/invoices/" . $orderId . "/status";
+            $url = config('frontend.url') . "/transactions/" . $trans['id'] . "/status";
         } else
-//            INTCARD
             $url = VNPAYService::create_payment($trans->payment_code, $money, "VNBANK");
+//            INTCARD
 
         return $this->successResponse(["url" => $url], "Successfully!");
     }
@@ -81,15 +68,16 @@ class TransactionController extends ApiController
     {
         $money = abs($request->money);
         $paymentCode = $request->payment_code;
+
         $orderId = $request->order_id;
         // TODO:: tìm payment_code
 
-        $trans = $this->transactionRepository->findByPaymentCode($paymentCode);
+        $trans = $this->transactionRepository->findByOrderId($orderId);
 
         if (!empty($trans)) {
-            $url = VNPAYService::refund("03", $paymentCode, $money, $trans->payment_date);
+            $url = VNPAYService::refund("03", $trans->payment_code, $money, $trans->payment_date);
         } else {
-            $url = config('frontend.transaction-fail');
+            $url = config('frontend.url');
         }
 
         return $this->successResponse(["url" => $url], "Successfully!");
@@ -118,11 +106,17 @@ class TransactionController extends ApiController
         ];
 
         try {
-            $transaction = $this->transactionRepository->getStatistic($filter);
+//            $transaction = $this->transactionRepository->getStatistic($filter);
             $payment_method = $this->transactionRepository->getStatisticByPaymentMethod($filter);
+            if (empty($payment_method['vnpay']))
+                $payment_method['vnpay'] = 0;
+            if (empty($payment_method['atm']))
+                $payment_method['atm'] = 0;
+            if (empty($payment_method['shipcod']))
+                $payment_method['shipcod'] = 0;
 
             return $this->successResponse([
-                'transaction' => $transaction,
+//                'transaction' => $transaction,
                 'method' => $payment_method
             ], "Successfully!");
         } catch (\Exception $exception) {
@@ -147,7 +141,7 @@ class TransactionController extends ApiController
 
     public function getTransactionByOrder(Request $request)
     {
-        $orderId = $request->order_id;
+        $orderId = (int) $request->order_id;
 
         try {
             $transactionData = $this->transactionRepository->findByOrderId($orderId);
@@ -164,7 +158,7 @@ class TransactionController extends ApiController
         try {
             if (!empty($request->status) && $request->status === "paid") {
                 $transaction = $this->transactionRepository->update([
-                    "status" => $request->status
+                    "status" => "successful"
                 ], $transaction['id']);
             }
             return $this->successResponse($transaction, "Successfully!");
@@ -193,11 +187,15 @@ class TransactionController extends ApiController
             $results = [];
             $month = $filter['start_at'];
             for ($i = 1; $i <= 6; $i++) {
-                $results[$month->format('Y-m')] = [
+                $key = $month->format('Y-m');
+                $results[$key] = [
+                    'date' => $month->format('Y-m'),
                     'successful' => 0,
                     'failed' => 0,
+                    'pending' => 0,
                     'total' => 0,
                     'success_percentage' => 0,
+                    'fail_percentage' => 0,
                 ];
                 $month = $month->addMonth();
             }
@@ -209,14 +207,17 @@ class TransactionController extends ApiController
                     $results[$month]['successful'] = $transaction->count;
                 } else if ($transaction->status == 'failed') {
                     $results[$month]['failed'] = $transaction->count;
+                } else if ($transaction->status == 'pending') {
+                    $results[$month]['pending'] = $transaction->count;
                 }
-                $results[$month]['total'] = $results[$month]['successful'] + $results[$month]['failed'];
+                $results[$month]['total'] = $results[$month]['successful'] + $results[$month]['failed'] + $results[$month]['pending'];
                 if ($results[$month]['total'] > 0) {
                     $results[$month]['success_percentage'] = $results[$month]['successful'] / $results[$month]['total'] * 100;
+                    $results[$month]['fail_percentage'] = $results[$month]['failed'] / $results[$month]['total'] * 100;
                 }
             }
 
-            return $this->successResponse($results, "Successfully!");
+            return $this->successResponse(collect($results)->values(), "Successfully!");
         } catch (\Exception $exception) {
             Log::error("[ERROR]" . $exception->getMessage());
             return $this->errorResponse([], 'Server error', 500);
@@ -242,7 +243,9 @@ class TransactionController extends ApiController
             $day = Carbon::parse($filter['start_at']);
             $dayOfMonth = Carbon::parse($filter['end_at'])->diffInDays(Carbon::parse($filter['start_at']));
             for ($i = 0; $i <= $dayOfMonth; $i++) {
-                $results[$day->format('m-d')] = [
+                $key = $day->format('m-d');
+                $results[$key] = [
+                    'date' => $key,
                     'pay' => 0,
                     'refund' => 0,
                 ];
@@ -254,7 +257,7 @@ class TransactionController extends ApiController
                 $day = $transaction->day;
                 $results[$day][$transaction->type] = (int) $transaction->total;
             }
-            $data['results'] = $results;
+            $data['results'] = collect($results)->values();
 
             return $this->successResponse($data, "Successfully!");
         } catch (\Exception $exception) {
