@@ -34,8 +34,8 @@ class TransactionController extends ApiController
     }
     public function processPayment(CreatePaymentRequest $request)
     {
-        $money = abs($request->money);
-        $method = empty($request->payment_method) ? "" : $request->payment_method;
+        $money = $request->money;
+        $method = $request->payment_method ?? "";
         $orderId = $request->order_id;
 
         $trans_data = [
@@ -49,30 +49,17 @@ class TransactionController extends ApiController
 
         $trans = $this->createTransaction($trans_data);
 
-        // TODO: tạo hóa đơn
-//        $invoice = $this->invoiceRepository->create([
-//            "order_id" => $request->order_id,
-//            "invoice_code" => "123",
-//            "transaction_id" => $trans['id'],
-//            "total" => $money,
-//            "status" => "new",
-//        ]);
-//
-//        $invoice = $this->invoiceRepository->update([
-//            'invoice_code' => Invoice::generateCode($trans['id']),
-//        ], $invoice['id']);
-
         if ($method === "vnpay") {
             $url = VNPAYService::create_payment($trans->payment_code, $money, "VNPAYQR");
         } else if ($method === "shipcod") {
-            // TODO: Đổi trạng thái hóa đơn
-            Http::post('SP_01:api/'. $orderId .'/capnhattrangthai', [
+            // TODO: Lấy API SP_01
+            Http::post('SP_01:api/' . $orderId . '/capnhattrangthai', [
                 'status' => "unpaid"
             ]);
-            $url = config('frontend.url') . "/invoices/" . $orderId . "/status";
+            $url = config('frontend.url') . "/transactions/" . $trans['id'] . "/status";
         } else
-//            INTCARD
             $url = VNPAYService::create_payment($trans->payment_code, $money, "VNBANK");
+//            INTCARD
 
         return $this->successResponse(["url" => $url], "Successfully!");
     }
@@ -81,15 +68,16 @@ class TransactionController extends ApiController
     {
         $money = abs($request->money);
         $paymentCode = $request->payment_code;
+
         $orderId = $request->order_id;
         // TODO:: tìm payment_code
 
-        $trans = $this->transactionRepository->findByPaymentCode($paymentCode);
+        $trans = $this->transactionRepository->findByOrderId($orderId);
 
         if (!empty($trans)) {
-            $url = VNPAYService::refund("03", $paymentCode, $money, $trans->payment_date);
+            $url = VNPAYService::refund("03", $trans->payment_code, $money, $trans->payment_date);
         } else {
-            $url = config('frontend.transaction-fail');
+            $url = config('frontend.url');
         }
 
         return $this->successResponse(["url" => $url], "Successfully!");

@@ -24,6 +24,6 @@ class Transaction extends Model
 
     public static function generateCode($id, $created_at)
     {
-        return 'SP' . $id . date('Ymd', strtotime($created_at));
+        return 'SP' . date('ymd', strtotime($created_at)) . sprintf("%04d", $id) ;
     }
 }
