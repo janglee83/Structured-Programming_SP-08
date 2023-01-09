@@ -12,4 +12,8 @@ interface TransactionRepository extends RepositoryInterface {
     public function getStatistic($filter);
 
     public function getStatisticByPaymentMethod($filter);
+
+    public function getStatisticByMonth($filter);
+
+    public function getStatisticPayAndRefund($filter);
 }
