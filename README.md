@@ -2,44 +2,52 @@
 
 # Quick Start
 
-## To run this project locally:
-1. Prerequisites: Make sure you've installed [php] ≥ 7, [postgresql lts version]
-2. 
+## To run this project locally
+1. Prerequisites: Make sure you've installed [docker]
+2. You must run commands in Linux or Powershell environment on Windows
+
 ## Copy .env of app
 ```
-
-$cp .env.example .env
-
+$ cp .env.example .env
 ```
 
-## Config file .env
+## Config DB in .env
 ```
-
-$cp .env.example .env
-
+APP_URL=https://localhost/
+...
+DB_CONNECTION=mysql
+DB_HOST=sp-db
+DB_PORT=3306
+DB_DATABASE=sp_database
+DB_USERNAME=root
+DB_PASSWORD=123456
 ```
 
 ## Build docker container
+>
+> After Docker runs, the process takes about 5p to complete the processes. 
+> You can watch your process in server's log terminal by click View details at sp08-server.
+>
+
 ```
-
-$ docker-compose up -d--build
-
+$ docker-compose up -d --build
 ```
 
 ## Migrate and seed data
 ```
+$ docker-compose exec app ash
 
-$php artisan storage:link
+[/work/app]
 
-$php artisan key:generate
+$ php artisan storage:link
 
-$php artisan migrate
+$ php artisan key:generate
 
-$php artisan db:seed
+$ php artisan migrate
+
+$ php artisan db:seed
 
 ```
-5. Run the local development server: `yarn dev` in folder src and `php artisan serve` in folder backend (see `package.json` for a
-   full list of `scripts` you can run with `yarn`)
 
 Go ahead and play with the app and the code. As you make code changes, the app will automatically reload.
 
