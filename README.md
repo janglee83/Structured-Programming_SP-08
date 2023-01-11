@@ -6,6 +6,14 @@
 1. Prerequisites: Make sure you've installed [docker]
 2. You must run commands in Linux or Powershell environment on Windows
 
+## ATM card information
+
+Ngân hàng: NCB
+Số thẻ: 9704198526191432198
+Tên chủ thẻ:NGUYEN VAN A
+Ngày phát hành:07/15
+Mật khẩu OTP:123456
+
 ## Copy .env of app
 ```
 $ cp .env.example .env
