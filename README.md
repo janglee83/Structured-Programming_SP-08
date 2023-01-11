@@ -6,23 +6,26 @@
 >
 
 ## To run this project locally
-1. Prerequisites: Make sure you've installed [docker]
+
+### Prerequisites
+1. Make sure you've installed [docker]
 2. You must run commands in Linux or Powershell environment on Windows
 
-## ATM card information
-
+### ATM card information
+```
 Ngân hàng: NCB
 Số thẻ: 9704198526191432198
 Tên chủ thẻ:NGUYEN VAN A
 Ngày phát hành:07/15
 Mật khẩu OTP:123456
+```
 
-## Copy .env of app
+### Copy .env of app
 ```
 $ cp .env.example .env
 ```
 
-## Config DB in .env
+### Config DB in .env
 ```
 APP_URL=https://localhost/
 ...
@@ -34,7 +37,7 @@ DB_USERNAME=root
 DB_PASSWORD=123456
 ```
 
-## Build docker container
+### Build docker container
 >
 > After Docker runs, the process takes about 5p to complete the processes. 
 > You can watch your process in server's log terminal by click View details at sp08-server.
@@ -44,7 +47,7 @@ DB_PASSWORD=123456
 $ docker-compose up -d --build
 ```
 
-## Migrate and seed data
+### Migrate and seed data
 ```
 $ docker-compose exec sp08-server ash
 
