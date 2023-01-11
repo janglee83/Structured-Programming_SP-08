@@ -1,6 +1,9 @@
 # Structured-Programming_SP-08
 
 # Quick Start
+>
+> Version 1.2 for round 2
+>
 
 ## To run this project locally
 1. Prerequisites: Make sure you've installed [docker]
