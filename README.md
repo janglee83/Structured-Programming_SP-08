@@ -35,9 +35,9 @@ $ docker-compose up -d --build
 
 ## Migrate and seed data
 ```
-$ docker-compose exec app ash
+$ docker-compose exec sp08-server ash
 
-[/work/app]
+[/var/www/html]
 
 $ php artisan storage:link
 
