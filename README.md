@@ -1,16 +1,28 @@
-# coffee-web
+# Structured-Programming_SP-08
 
 # Quick Start
 
 ## To run this project locally:
-1. Prerequisites: Make sure you've installed [Node.js] ≥ 12 and [php] ≥ 7
-2. From folder src, install dependencies: `yarn install`
-3. From folder backend, install dependencies: `composer install`
-4. 
+1. Prerequisites: Make sure you've installed [php] ≥ 7, [postgresql lts version]
+2. 
 ## Copy .env of app
 ```
 
 $cp .env.example .env
+
+```
+
+## Config file .env
+```
+
+$cp .env.example .env
+
+```
+
+## Build docker container
+```
+
+$ docker-compose up -d--build
 
 ```
 
@@ -40,3 +52,5 @@ Go ahead and play with the app and the code. As you make code changes, the app w
 [near-cli]: https://github.com/near/near-cli
 [gh-pages]: https://github.com/tschaub/gh-pages
 [php]: https://www.php.net/downloads.php
+[postgresql lts version]: https://www.postgresql.org/download/
+[docker]: https://www.docker.com/
