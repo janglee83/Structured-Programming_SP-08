@@ -3,6 +3,7 @@
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PaymentTypeController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\VNPAYController;
 use Illuminate\Support\Facades\Route;
@@ -55,6 +56,8 @@ Route::group(['middleware' => 'api'], function () {
             Route::get("/statistic", [TransactionController::class, "statistic"]);
             Route::get("/statistic-by-month", [TransactionController::class, "statisticByMonth"]);
             Route::get("/statistic-pay-and-refund", [TransactionController::class, "statisticPayAndRefund"]);
+            Route::get("/payment-method", [PaymentTypeController::class, "getPaymentTypeList"]);
+            Route::put("/payment-change-status", [PaymentTypeController::class, "setPaymentStatus"]);
         });
     });
 });
