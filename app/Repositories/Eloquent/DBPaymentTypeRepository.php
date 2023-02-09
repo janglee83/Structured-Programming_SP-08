@@ -17,4 +17,13 @@ class DBPaymentTypeRepository extends BaseRepository implements PaymentTypeRepos
     {
         return $this->model->all(['payment_type', 'status']);
     }
+
+    public function updateStatus($method)
+    {
+
+        $data = $this->model->where('payment_type', '=', $method)->first();
+        return $this->update([
+            'status' => (int)!$data['status']
+        ], $data['id']);
+    }
 }

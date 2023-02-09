@@ -171,9 +171,9 @@ class VNPAYService
 
                             //Cài đặt Code cập nhật kết quả thanh toán, tình trạng đơn hàng vào DB
                             // TODO: cập nhật trạng thái đơn hàng
-                            Http::post('SP_01:api/'. $transaction['order_id'] .'/capnhattrangthai', [
-                                'status' => $status
-                            ]);
+//                            Http::post('http://103.179.173.95:8081/api/UpdateOrderStatus/'. $transaction['order_id'], [
+//                                'newStatus' => 'dathanhtoan'
+//                            ]);
 
                             //Trả kết quả về cho VNPAY: Website/APP TMĐT ghi nhận yêu cầu thành công
                             $returnData['RspCode'] = '00';

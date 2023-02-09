@@ -27,10 +27,20 @@ class PaymentTypeController extends ApiController
     }
 
     /**
-     * 
+     *
      */
     public function setPaymentStatus(Request $request) {
-        $listPayment = $request->only('payment_method');
-        dd($listPayment);
+        try {
+            $listPayment = $request->only('payment_method');
+
+            foreach ($listPayment as $method) {
+                $data = $this->paymentTypeRepository->updateStatus($method);
+            }
+
+            return $this->successResponse($data, "Successfully!");
+        } catch (\Exception $exception) {
+            Log::error("[ERROR]" . $exception->getMessage());
+            return $this->errorResponse([], 'Server error', 500);
+        }
     }
 }

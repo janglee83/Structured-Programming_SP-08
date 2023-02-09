@@ -52,11 +52,8 @@ class TransactionController extends ApiController
         if ($method === "vnpay") {
             $url = VNPAYService::create_payment($trans->payment_code, $money, "VNPAYQR");
         } else if ($method === "shipcod") {
-            // TODO: Lấy API SP_01
-            Http::post('SP_01:api/' . $orderId . '/capnhattrangthai', [
-                'status' => "unpaid"
-            ]);
-            $url = config('frontend.url') . "/transactions/" . $trans['id'] . "/status";
+            $url = config("frontend.url") . "/transactions/status-payment?payment_code="
+                . $trans['payment_code'] . "&money=" . $money . "&status=" . $trans['status'];
         } else
             $url = VNPAYService::create_payment($trans->payment_code, $money, "VNBANK");
 //            INTCARD
