@@ -42,7 +42,7 @@ Route::group(['middleware' => 'api'], function () {
         Route::post("/", [TransactionController::class, "processPayment"]);
         Route::post("/refund", [TransactionController::class, "refund"]);
 
-        Route::post("/{transaction}/status", [TransactionController::class, "changeStatus"]);
+        Route::put("/{transaction}/status", [TransactionController::class, "changeStatus"]);
     });
 
     Route::group(["prefix" => "vnpay"], function () {
