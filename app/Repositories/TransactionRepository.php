@@ -7,6 +7,8 @@ interface TransactionRepository extends RepositoryInterface {
 
     public function findByOrderId($order_id);
 
+    public function findSuccessByOrderId($order_id);
+
     public function getTransactions($filter, $limit = 10);
 
     public function getStatistic($filter);

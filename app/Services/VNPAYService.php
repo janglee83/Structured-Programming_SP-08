@@ -158,13 +158,15 @@ class VNPAYService
                                 // Trạng thái thanh toán thành công
                                 $status = "paid";
                                 $transactionRepository->update([
-                                    'status' => 'success',
-                                    'bank_code' => $vnp_BankCode
+                                    'status' => 'successful',
+                                    'bank_code' => $vnp_BankCode,
+                                    'transaction_code' => $vnpTranId,
                                 ], $transaction['id']);
                             } else {
                                 // Trạng thái thanh toán thất bại / lỗi
                                 $status = "canceled";
                                 $transactionRepository->update([
+                                    'transaction_code' => $vnpTranId,
                                     'status' => 'failed'
                                 ], $transaction['id']);
                             }
@@ -202,54 +204,62 @@ class VNPAYService
         return $returnData;
     }
 
-    public static function refund($tranType, $tranCode, $money, $paymentDate, $email = "SP_08@gmail.com") {
+    public static function refund($tranType, $transaction, $refundTrans) {
         if (!self::hasKey()) return null;
 
         $vnp_TmnCode = config("vnpay.tmn_code"); // Mã website tại VNPAY
         $vnp_HashSecret = config("vnpay.hash_secret"); // Chuỗi bí mật
-        $vnp_apiUrl = config("vnpay.api_url"); //
+        $apiUrl = config("vnpay.api_refund"); //
 
-        $amount = $money * 100;
-//        $ipaddr = $_SERVER['REMOTE_ADDR'];
+        $amount = $refundTrans['money'] * 100;
         $inputData = array(
+            "vnp_RequestId" => $refundTrans['payment_code'],
             "vnp_Version" => '2.1.0',
-            "vnp_TransactionType" => empty($tranType) ? "03" : $tranType,
             "vnp_Command" => "refund",
-            "vnp_CreateBy" => $email,
             "vnp_TmnCode" => $vnp_TmnCode,
-            "vnp_TxnRef" => $tranCode,
+            "vnp_TransactionType" => $tranType ?? "02",
+            "vnp_TxnRef" => $transaction['payment_code'],
             "vnp_Amount" => $amount,
-            "vnp_OrderInfo" => 'Hoan tra giao dich ' . $tranCode,
-            "vnp_TransDate" => $paymentDate,
+            "vnp_TransactionNo" => $transaction['transaction_code'],
+            "vnp_TransactionDate" => date('YmdHis', strtotime($transaction['payment_date'])),
+            "vnp_CreateBy" => "admin",
             "vnp_CreateDate" => date('YmdHis'),
-            "vnp_IpAddr" => request()->ip()
+            "vnp_IpAddr" => request()->ip(),
+            "vnp_OrderInfo" => 'Hoan tra giao dich ' . $transaction['payment_code'],
         );
-        ksort($inputData);
-        $query = "";
-        $i = 0;
-        $hashData = "";
-        foreach ($inputData as $key => $value) {
-            if ($i == 1) {
-                $hashData .= '&' . urlencode($key) . "=" . urlencode($value);
-            } else {
-                $hashData .= urlencode($key) . "=" . urlencode($value);
-                $i = 1;
-            }
-            $query .= urlencode($key) . "=" . urlencode($value) . '&';
-        }
 
-        $vnp_apiUrl = $vnp_apiUrl . "?" . $query;
+        $format = '%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s';
+
+        $dataHash = sprintf(
+            $format,
+            $inputData['vnp_RequestId'], //1
+            $inputData['vnp_Version'], //2
+            $inputData['vnp_Command'], //3
+            $inputData['vnp_TmnCode'], //4
+            $inputData['vnp_TransactionType'], //5
+            $inputData['vnp_TxnRef'], //6
+            $inputData['vnp_Amount'], //7
+            $inputData['vnp_TransactionNo'],  //8
+            $inputData['vnp_TransactionDate'], //9
+            $inputData['vnp_CreateBy'], //10
+            $inputData['vnp_CreateDate'], //11
+            $inputData['vnp_IpAddr'], //12
+            $inputData['vnp_OrderInfo'] //13
+        );
+
         if (isset($vnp_HashSecret)) {
-            $vnpSecureHash = hash('sha256', $vnp_HashSecret . $hashData);
-            $vnp_apiUrl .= 'vnp_SecureHash=' . $vnpSecureHash;
+            $vnpSecureHash = hash('sha256', $vnp_HashSecret . $dataHash);
+            $inputData['vnp_SecureHash'] = $vnpSecureHash;
         }
 
-        $ch = curl_init($vnp_apiUrl);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HEADER, 0);
-        $result = curl_exec($ch);
-        curl_close($ch);
+        $headers = [
+            "Content-Type" => "application/json"
+        ];
+        $response = Http::withHeaders($headers)->post($apiUrl, $inputData);
+        $statusCode = $response->status();
+        $responseBody = json_decode($response->getBody(), true);
 
-        return $result;
+        return $responseBody;
     }
+
 }

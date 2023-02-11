@@ -22,6 +22,11 @@ class DBTransactionRepository extends BaseRepository implements TransactionRepos
         return $this->model->where('order_id', $order_id)->get();
     }
 
+    public function findSuccessByOrderId($order_id)
+    {
+        return $this->model->where('status', 'successful')->where('order_id', $order_id)->first();
+    }
+
     public function getTransactions($filter, $limit = 10)
     {
         return $this->model->select()

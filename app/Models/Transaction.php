@@ -20,10 +20,15 @@ class Transaction extends Model
      *
      * @var array
      */
-    protected $fillable = ['order_id', 'customer_id', 'method', 'payment_code', 'money', 'status', 'payment_date', 'type', 'bank_code'];
+    protected $fillable = ['order_id', 'customer_id', 'method', 'payment_code', 'money', 'status', 'payment_date', 'type', 'bank_code', 'transaction_code'];
 
     public static function generateCode($id, $created_at)
     {
         return 'SP' . date('ymd', strtotime($created_at)) . sprintf("%04d", $id) ;
+    }
+
+    public static function generateRefundCode($id, $created_at)
+    {
+        return 'RF' . date('ymd', strtotime($created_at)) . sprintf("%04d", $id) ;
     }
 }

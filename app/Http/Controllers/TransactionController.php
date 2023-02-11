@@ -23,11 +23,16 @@ class TransactionController extends ApiController
         $this->invoiceRepository = $invoiceRepository;
     }
 
-    private function createTransaction($data)
+    private function createTransaction($data, $type = 'pay')
     {
         $trans = $this->transactionRepository->create($data);
+        if ($type === 'pay') {
+            $paymentCode = Transaction::generateCode($trans['id'], $trans['created_at']);
+        } else {
+            $paymentCode = Transaction::generateRefundCode($trans['id'], $trans['created_at']);
+        }
         $trans = $this->transactionRepository->update([
-            'payment_code' => Transaction::generateCode($trans['id'], $trans['created_at']),
+            'payment_code' => $paymentCode,
         ], $trans['id']);
 
         return $trans;
@@ -43,11 +48,10 @@ class TransactionController extends ApiController
             'status' => 'pending',
             "order_id" => $orderId,
             'method' => $method,
-            'money' => $money,
-            'payment_date' => now()
+            'money' => $money
         ];
 
-        $trans = $this->createTransaction($trans_data);
+        $trans = $this->createTransaction($trans_data, 'pay');
 
         if ($method === "vnpay") {
             $url = VNPAYService::create_payment($trans->payment_code, $money, "VNPAYQR");
@@ -63,16 +67,46 @@ class TransactionController extends ApiController
 
     public function refund(Request $request)
     {
-        $money = abs($request->money);
-        $paymentCode = $request->payment_code;
-
         $orderId = $request->order_id;
+        $money = $request->money;
         // TODO:: tìm payment_code
+        $transaction = $this->transactionRepository->findSuccessByOrderId($orderId);
+        $tranType = (int)$money < (int)$transaction['money'] ? "02" : "03";
 
-        $trans = $this->transactionRepository->findByOrderId($orderId);
+        $money = (int)$money < (int)$transaction['method'] ? $money : $transaction["money"];
 
-        if (!empty($trans)) {
-            $url = VNPAYService::refund("03", $trans->payment_code, $money, $trans->payment_date);
+        if (!empty($transaction)) {
+            $trans_data = [
+                'customer_id' => $transaction['customer_id'],
+                'status' => 'pending',
+                "method" => $transaction['method'],
+                "money" => $money,
+                "order_id" => $orderId,
+                "type" => "refund"
+            ];
+
+            $refundTrans = $this->createTransaction($trans_data, 'refund');
+
+            $response = VNPAYService::refund($tranType, $transaction, $refundTrans);
+
+            if ($response['vnp_ResponseCode'] == "00") {
+                $date = date_create_from_format("YmdHis", $response['vnp_PayDate']);
+                $status = "successful";
+                $this->transactionRepository->update([
+                    "bank_code" => strtolower($response['vnp_BankCode']),
+                    "transaction_code" => $response['vnp_TransactionNo'],
+                    "status" => $status,
+                    "payment_date" => $date
+                ], $refundTrans['id']);
+            } else {
+                $status = "failed";
+                $this->transactionRepository->update([
+                    "bank_code" => strtolower($response['vnp_BankCode']),
+                    "status" => $status
+                ], $refundTrans['id']);
+            }
+
+            $url = config("frontend.url") . "/transactions/status-payment?payment_code=".$refundTrans['payment_code']."&money=".$money."&status=".$status;
         } else {
             $url = config('frontend.url');
         }

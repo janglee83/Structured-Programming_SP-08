@@ -22,6 +22,9 @@ class VNPAYController extends Controller
         $transactionCode = $request->vnp_TxnRef;
         $bankCode = $request->vnp_BankCode;
         $money = (int) $request->vnp_Amount / 100;
+        $vnpTranId = $request->vnp_TransactionNo; // Mã giao dịch tại VNPAY
+        $vnpPayDate = $request->vnp_PayDate; // Ngày giao dịch
+        $date = date_create_from_format("YmdHis", $vnpPayDate);
         $transaction = $this->transactionRepository->findByPaymentCode($transactionCode);
         if ($request->vnp_ResponseCode == "00") {
             $status = "successful";
@@ -31,8 +34,9 @@ class VNPAYController extends Controller
         if (!empty($transaction)) {
             $this->transactionRepository->update([
                 "bank_code" => strtolower($bankCode),
+                "transaction_code" => $vnpTranId,
                 "status" => $status,
-                "payment_date" => $request->vnp_ResponseCode == "00" ? now() : null
+                "payment_date" => $request->vnp_ResponseCode == "00" ? $date : null
             ], $transaction->id);
         }
 

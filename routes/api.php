@@ -20,20 +20,6 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::group(['middleware' => 'api'], function () {
-//    Route::prefix('/customers')->group(function () {
-//        Route::get('/', [CustomerController::class, 'getCustomers']);
-//        Route::post('/{customer}', [CustomerController::class, 'store']);
-//    });
-//
-//    Route::prefix('/orders')->group(function () {
-//        Route::get('/', [OrderController::class, 'getOrders']);
-//    });
-//
-//    Route::prefix('/invoices')->group(function () {
-//        Route::get('/', [InvoiceController::class, 'getInvoices']);
-//        Route::get('/{invoice_id}/status', [InvoiceController::class, 'status']);
-//    });
-
     Route::prefix('/transactions')->group(function () {
 //        Route::get("/", [TransactionController::class, "getTransactions"]);
         Route::get("/by-payment-code", [TransactionController::class, "getTransactionByPaymentCode"]);
@@ -41,6 +27,7 @@ Route::group(['middleware' => 'api'], function () {
 
         Route::post("/", [TransactionController::class, "processPayment"]);
         Route::post("/refund", [TransactionController::class, "refund"]);
+        Route::post("/post", [TransactionController::class, "post"]);
 
         Route::put("/{transaction}/status", [TransactionController::class, "changeStatus"]);
     });
